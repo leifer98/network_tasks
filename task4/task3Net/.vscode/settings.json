@@ -1,0 +1,9 @@
+{
+    "C_Cpp.errorSquiggles": "disabled",
+    "files.associations": {
+        "inet.h": "c",
+        "ip_icmp.h": "c",
+        "string.h": "c",
+        "types.h": "c"
+    }
+}
