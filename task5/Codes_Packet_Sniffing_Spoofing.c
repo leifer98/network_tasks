@@ -42,113 +42,147 @@
  * Listing 12.2: Packet Capturing using raw socket
  **********************************************/
 
-#include <sys/socket.h>
-#include <linux/if_packet.h>
-#include <net/ethernet.h>
-#include <stdio.h>
-#include <linux/filter.h>
-#include <linux/types.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-#include <netinet/tcp.h>
+// #include <sys/socket.h>
+// #include <linux/if_packet.h>
+// #include <net/ethernet.h>
+// #include <stdio.h>
+// #include <linux/filter.h>
+// #include <linux/types.h>
+// #include <netinet/ip.h>
+// #include <arpa/inet.h>
+// #include <netinet/tcp.h>
 
 /**********************************************
  * Listing 12.1: A compiled BPF code
  **********************************************/
 
-typedef struct clchdr {
-  uint32_t unixtime;
-  uint16_t length;
-  uint16_t reserved:3, c_flag:1, s_flag:1, t_flag:1, status:10;
-  uint16_t cache;
-  uint16_t padding;
-} cpack, *pcpack;
+// typedef struct clchdr {
+//   uint32_t unixtime;
+//   uint16_t length;
+//   uint16_t reserved:3, c_flag:1, s_flag:1, t_flag:1, status:10;
+//   uint16_t cache;
+//   uint16_t padding;
+// } cpack, *pcpack;
 
+// int main()
+// {
+//   int PACKET_LEN = 512;
+//   char buffer[PACKET_LEN];
+//   struct sockaddr saddr;
+//   struct packet_mreq mr;
 
-int main()
-{
-  int PACKET_LEN = 512;
-  char buffer[PACKET_LEN];
-  struct sockaddr saddr;
-  struct packet_mreq mr;
+//   // Create the raw socket
+//   int sock = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_IP));
 
-  // Create the raw socket
-  int sock = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_IP));
+//   // Turn on the promiscuous mode.
+//   mr.mr_type = PACKET_MR_PROMISC;
+//   setsockopt(sock, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr,
+//              sizeof(mr));
 
-  // Turn on the promiscuous mode.
-  mr.mr_type = PACKET_MR_PROMISC;
-  setsockopt(sock, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr,
-             sizeof(mr));
+//   // Getting captured packets
+//   while (1)
+//   {
+//     int data_size = recvfrom(sock, buffer, PACKET_LEN, 0,
+//                              &saddr, (socklen_t *)sizeof(saddr));
 
-  // Getting captured packets
-  while (1)
-  {
-    int data_size = recvfrom(sock, buffer, PACKET_LEN, 0,
-                             &saddr, (socklen_t *)sizeof(saddr));
+//     struct iphdr *iph = (struct iphdr *)(buffer + sizeof(struct ethhdr));
+//     unsigned short iphdrlen = iph->ihl * 4;
+//     struct tcphdr *tcph = (struct tcphdr *)(buffer + iphdrlen + sizeof(struct ethhdr));
+//     struct clchdr *clch = (struct clchdr *)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct tcphdr));
 
-    struct iphdr *iph = (struct iphdr *)(buffer + sizeof(struct ethhdr));
-    unsigned short iphdrlen = iph->ihl * 4;
-    struct tcphdr *tcph = (struct tcphdr *)(buffer + iphdrlen + sizeof(struct ethhdr));
-    struct clchdr *clch = (struct clchdr *)(buffer + iphdrlen + sizeof(struct ethhdr) + sizeof(struct tcphdr));
+//     unsigned int source_port = ntohs(tcph->source);
+//     unsigned int dest_port = ntohs(tcph->dest);
 
-    unsigned int source_port = ntohs(tcph->source);
-    unsigned int dest_port = ntohs(tcph->dest);
+//     if (data_size)
+//     {
+//       if ((dest_port == 9999 || source_port == 9999) && ntohs(iph->tot_len) > 150)
+//       {
+//         struct in_addr addr;
+//         addr.s_addr = htonl(iph->saddr);
+//         char *str = inet_ntoa(addr);
+//         addr.s_addr = htonl(iph->daddr);
+//         char *str2 = inet_ntoa(addr);
+//         printf("{ source_ip: %s, dest_ip: %s, source_port: %d, dest_port: %d, timestamp: %d, \ntotal_length: %d, cache_flag:%d, steps_flag:%d, type_flag:%d, status_code:%d, cache_control:%d, \ndata: %d}\n",
+//         str, str2, dest_port, source_port, 0, ntohs(iph->tot_len), clch->c_flag, clch->s_flag, clch->t_flag, ntohs(clch->status), ntohs(clch->cache), 0);
+//       }
+//     }
+//   }
 
-    if (data_size)
-    {
-      if (dest_port == 9999 || source_port == 9999)
-      {
-        struct in_addr addr;
-        addr.s_addr = htonl(iph->saddr);
-        char *str = inet_ntoa(addr);
-        addr.s_addr = htonl(iph->daddr);
-        char *str2 = inet_ntoa(addr);
-        printf("{ source_ip: %s, dest_ip: %s, source_port: %d, dest_port: %d, timestamp: %d, \ntotal_length: %d, cache_flag:%d, steps_flag:%d, type_flag:%d, status_code:%d, cache_control:%d, data:%d}\n", 
-        str, str2, dest_port, source_port, 0, ntohs(iph->tot_len), clch->c_flag, clch->s_flag, clch->t_flag, ntohs(clch->status), ntohs(clch->cache), 0);
-      }
-    }
-  }
-
-  close(sock);
-  return 0;
-}
+//   close(sock);
+//   return 0;
+// }
 
 // /**********************************************
 //  * Listing 12.3: Packet Capturing using raw libpcap
 //  **********************************************/
 
-// #include <pcap.h>
-// #include <stdio.h>
+#include <pcap.h>
+#include <stdio.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
 
-// void got_packet(u_char *args, const struct pcap_pkthdr *header,
-//         const u_char *packet)
-// {
-//    printf("Got a packet\n");
-// }
+void got_packet(u_char *args, const struct pcap_pkthdr *header,
+                const u_char *packet)
+{
+  u_int ip_len;
+  char src_ip[INET_ADDRSTRLEN];
+  char dst_ip[INET_ADDRSTRLEN];
 
-// int main()
-// {
-//   pcap_t *handle;
-//   char errbuf[PCAP_ERRBUF_SIZE];
-//   struct bpf_program fp;
-//   char filter_exp[] = "ip proto icmp";
-//   bpf_u_int32 net;
+  // Check the IP header
+  struct iphdr *iphdr = (struct iphdr *)packet;
+  struct icmphdr *icmphdr = (struct icmphdr *)(packet + (iphdr->ihl * 4));
+  char sourceIPAddrReadable[32] = {'\0'};
+  inet_ntop(AF_INET, &iphdr->saddr, sourceIPAddrReadable, sizeof(sourceIPAddrReadable));
+  char destinationIPAddrReadable[32] = {'\0'};
+  inet_ntop(AF_INET, &iphdr->daddr, destinationIPAddrReadable, sizeof(destinationIPAddrReadable));
 
-//   // Step 1: Open live pcap session on NIC with name eth3
-//   handle = pcap_open_live("eth3", BUFSIZ, 1, 1000, errbuf);
-//   puts("finised step 1");
-//   // Step 2: Compile filter_exp into BPF psuedo-code
-//   pcap_compile(handle, &fp, filter_exp, 0, net);
-//   pcap_setfilter(handle, &fp);
-//   puts("finised step 2");
+  struct icmphdr *icmph = (struct icmphdr *)(packet + sizeof(struct iphdr));
 
-//   // Step 3: Capture packets
-//   pcap_loop(handle, -1, got_packet, NULL);
-//   puts("finised step 3");
+  if (icmphdr->type == ICMP_ECHOREPLY)
+  {
+    printf("ICMP Echo Reply\n");
+  }
+  else if (icmphdr->type == ICMP_ECHO)
+  {
+    printf("ICMP Echo Request\n");
+  }
+  else
+    printf("Not an ICMP Echo packet\n");
 
-//   pcap_close(handle);   //Close the handle
-//   return 0;
-// }
+  printf("Source IP: %s\n", sourceIPAddrReadable);
+  printf("Destination IP: %s\n", destinationIPAddrReadable);
+
+  printf("--------------------------------\n");
+}
+
+int main()
+{
+  pcap_t *handle;
+  char errbuf[PCAP_ERRBUF_SIZE];
+  struct bpf_program fp;
+  char filter_exp[] = "icmp";
+  bpf_u_int32 net;
+
+  // Step 1: Open live pcap session on NIC with name eth3
+  handle = pcap_open_live("eth0", BUFSIZ, 1, 1000, errbuf);
+  puts("finised step 1");
+  // Step 2: Compile filter_exp into BPF psuedo-code
+  pcap_compile(handle, &fp, filter_exp, 0, net);
+  pcap_setfilter(handle, &fp);
+  puts("finised step 2");
+
+  // Step 3: Capture packets
+  pcap_loop(handle, -1, got_packet, NULL);
+  puts("finised step 3");
+
+  pcap_close(handle); // Close the handle
+  return 0;
+}
 
 // /**********************************************
 //  * Code on Page 213 (Section 12.2.4)
