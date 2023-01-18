@@ -9,7 +9,7 @@ services:
             - ALL
         privileged: true
         volumes:
-            - ./volumes:/volumes
+            - ./volumes:/volumes_attacker
         network_mode: host
 
     hostA:
@@ -18,6 +18,8 @@ services:
         tty: true
         cap_add:
             - ALL
+        volumes:
+            - ./volumes:/volumes_hostA
         networks:
             net-10.9.0.0:
                 ipv4_address: 10.9.0.5

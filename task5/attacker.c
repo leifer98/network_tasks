@@ -5,7 +5,6 @@
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <unistd.h>
-#include <pcap.h>
 #include <linux/if_packet.h>
 #include <net/ethernet.h>
 #include <linux/filter.h>
@@ -153,12 +152,13 @@ int main()
     struct packet_mreq mr;
 
     // Create the raw socket
+    // int sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     int sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 
     // Turn on the promiscuous mode.
     mr.mr_type = PACKET_MR_PROMISC;
     setsockopt(sock, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr));
-
+    printf("started sniffing...\n");
     while (1)
     {
         int data_size = recvfrom(sock, buffer, IP_MAXPACKET, 0, &saddr, (socklen_t *)sizeof(saddr));
