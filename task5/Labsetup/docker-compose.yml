@@ -2,6 +2,7 @@ version: "3"
 
 services:
     attacker:
+        user: "root"
         image: handsonsecurity/seed-ubuntu:large
         container_name: seed-attacker
         tty: true
@@ -13,13 +14,14 @@ services:
         network_mode: host
 
     hostA:
+        user: "root"
         image: handsonsecurity/seed-ubuntu:large
         container_name: hostA-10.9.0.5
         tty: true
         cap_add:
             - ALL
         volumes:
-            - ./volumes:/volumes_hostA
+            - ./volumes:/volumes
         networks:
             net-10.9.0.0:
                 ipv4_address: 10.9.0.5
@@ -31,6 +33,8 @@ services:
         tty: true
         cap_add:
             - ALL
+        volumes:
+            - ./volumes:/volumes
         networks:
             net-10.9.0.0:
                 ipv4_address: 10.9.0.6

@@ -96,21 +96,10 @@ int main()
                 {
                     fprintf(fp, "\nRESPOND: \n");
                 }
-                printf("%u   |      %u      |      %u     \n", ntohs(clch->t_flag), ntohl(clch->t_flag), clch->t_flag);
                 fprintf(fp, "{ source_ip: %s, dest_ip: %s, source_port: %d, dest_port: %d, timestamp: %u, \ntotal_length: %d, cache_flag:%d, steps_flag:%d, type_flag:%hu, status_code:%d, cache_control:%d, data:\n",
                         addrD, addrS, dest_port, source_port, ntohl(clch->unixtime),
                         ntohs(iph->tot_len), cache_flag, steps_flag, type_flag,
                         clch->status, ntohs(clch->cache));
-
-                // STATUS_OK: typing.Final[int] = 200
-                // STATUS_CLIENT_ERROR: typing.Final[int] = 400
-                // STATUS_SERVER_ERROR: typing.Final[int] = 500
-                // STATUS_UNKNOWN: typing.Final[int] = 999
-
-                // fprintf(fp,"{ source_ip: %s, dest_ip: %s, source_port: %d, ", addrS, addrD, source_port);
-                // fprintf(fp,"dest_port: %d, timestamp: %u, \ntotal_length: %d, ", dest_port, ntohl(clch->unixtime), ntohs(iph->tot_len));
-                // fprintf(fp,"cache_flag:%d, steps_flag:%d, type_flag:%d, ", clch->c_flag, clch->s_flag, clch->t_flag);
-                // fprintf(fp,"status_code:%d, cache_control:%d, data:\n",clch->status, ntohs(clch->cache));
 
                 int i = (iphdrlen + sizeof(struct ethhdr) + sizeof(struct tcphdr) + sizeof(struct calculatorPacket)) + OFFSET;
                 int limit = sizeof(buffer);

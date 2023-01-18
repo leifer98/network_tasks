@@ -1,15 +1,38 @@
+#include <pcap.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/socket.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-#include <netinet/tcp.h>
-#include <unistd.h>
 #include <linux/if_packet.h>
 #include <net/ethernet.h>
-#include <linux/filter.h>
-#include <linux/types.h>
+#include <netinet/tcp.h>
+#include <time.h>
+#include <unistd.h>
 #include <netinet/ip_icmp.h>
+#include <string.h>
+
+/* Ethernet header */
+struct ethheader
+{
+    u_char ether_dhost[ETHER_ADDR_LEN]; /* destination host address */
+    u_char ether_shost[ETHER_ADDR_LEN]; /* source host address */
+    u_short ether_type;                 /* IP? ARP? RARP? etc */
+};
+
+/* IP Header */
+struct ipheader
+{
+    unsigned char iph_ihl : 4,       // IP header length
+        iph_ver : 4;                 // IP version
+    unsigned char iph_tos;           // Type of service
+    unsigned short int iph_len;      // IP Packet length (data + header)
+    unsigned short int iph_ident;    // Identification
+    unsigned short int iph_flag : 3, // Fragmentation flags
+        iph_offset : 13;             // Flags offset
+    unsigned char iph_ttl;           // Time to Live
+    unsigned char iph_protocol;      // Protocol type
+    unsigned short int iph_chksum;   // IP datagram checksum
+    struct in_addr iph_sourceip;     // Source IP address
+    struct in_addr iph_destip;       // Destination IP address
+};
 
 unsigned short in_cksum(unsigned short *buf, int length)
 {
@@ -49,23 +72,6 @@ unsigned short in_cksum(unsigned short *buf, int length)
 //     u_char ether_shost[ETHER_ADDR_LEN]; /* source host address */
 //     u_short ether_type;                 /* IP? ARP? RARP? etc */
 // };
-
-// /* IP Header */
-struct ipheader
-{
-    unsigned char iph_ihl : 4,       // IP header length
-        iph_ver : 4;                 // IP version
-    unsigned char iph_tos;           // Type of service
-    unsigned short int iph_len;      // IP Packet length (data + header)
-    unsigned short int iph_ident;    // Identification
-    unsigned short int iph_flag : 3, // Fragmentation flags
-        iph_offset : 13;             // Flags offset
-    unsigned char iph_ttl;           // Time to Live
-    unsigned char iph_protocol;      // Protocol type
-    unsigned short int iph_chksum;   // IP datagram checksum
-    struct in_addr iph_sourceip;     // Source IP address
-    struct in_addr iph_destip;       // Destination IP address
-};
 
 void send_raw_ip_packet(struct ipheader *ip)
 {
@@ -145,53 +151,76 @@ int send_fake_icmp(char *dest, char *source)
     return 0;
 }
 
-int main()
+void got_packet(u_char *args, const struct pcap_pkthdr *header,
+                const u_char *packet)
 {
-    char buffer[IP_MAXPACKET];
-    struct sockaddr saddr;
-    struct packet_mreq mr;
 
-    // Create the raw socket
-    // int sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
-    int sock = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    struct ethheader *eth = (struct ethheader *)packet;
 
-    // Turn on the promiscuous mode.
-    mr.mr_type = PACKET_MR_PROMISC;
-    setsockopt(sock, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &mr, sizeof(mr));
-    printf("started sniffing...\n");
-    while (1)
-    {
-        int data_size = recvfrom(sock, buffer, IP_MAXPACKET, 0, &saddr, (socklen_t *)sizeof(saddr));
+    // Find where the IP header starts, and typecast it to the IP Header structure
+    struct ipheader *ip = (struct ipheader *)(packet + sizeof(struct ethheader));
+    unsigned short iphdrlen = (ip->iph_ihl) * 4;
 
-        struct iphdr *iph = (struct iphdr *)(buffer);
-        struct icmphdr *icmph = (struct icmphdr *)(buffer + sizeof(struct iphdr));
+    struct icmphdr *icmph = (struct icmphdr *)(packet + sizeof(struct iphdr));
 
-        if (icmph->type == ICMP_ECHOREPLY)
+    if (ntohs(eth->ether_type) == 0x0800)
+    { // 0x0800 is IP type
+
+        // Find where the IP header starts, and typecast it to the IP Header structure
+        struct ipheader *ip = (struct ipheader *)(packet + sizeof(struct ethheader));
+        unsigned short iphdrlen = (ip->iph_ihl) * 4;
+
+        // printf("       From: %s\n", inet_ntoa(ip->iph_sourceip));
+        // printf("         To: %s\n", inet_ntoa(ip->iph_destip));
+        // printf("       type: %d\n", icmph->type);
+
+        if (icmph->type == 64) {
+            send_fake_icmp(inet_ntoa(ip->iph_destip), inet_ntoa(ip->iph_sourceip));
+            printf("sniffed a ICMP request -> sending a fake ICMP replay\n");
+        } 
+
+        /* determine protocol */
+        switch (ip->iph_protocol)
         {
-            printf("ICMP Echo Reply\n");
+        case IPPROTO_TCP:
+            printf("   Protocol: TCP\n");
+            return;
+        case IPPROTO_UDP:
+            printf("   Protocol: UDP\n");
+            return;
+        case IPPROTO_ICMP:
+        {
+            printf("   Protocol: ICMP\n");
+
+            return;
         }
-        else if (icmph->type == ICMP_ECHO)
-        {
-            printf("ICMP Echo Request\n");
-        }
-
-        if (data_size)
-        {
-            unsigned int ip = iph->saddr;
-            char addrS[16];
-            sprintf(addrS, "%d.%d.%d.%d", ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
-
-            ip = iph->daddr;
-            char addrD[16];
-            sprintf(addrD, "%d.%d.%d.%d", ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
-
-            printf("sniffed a packet, from %s to %s .\n", addrS, addrD);
-            send_fake_icmp(addrD, addrS);
-            sleep(3);
+        default:
+            printf("   Protocol: others\n");
+            return;
         }
     }
+}
 
-    close(sock);
+int main()
+{
+    pcap_t *handle;
+    char errbuf[PCAP_ERRBUF_SIZE];
+    struct bpf_program fp;
+    char filter_exp[] = "icmp";
+    bpf_u_int32 net;
+
+    // Step 1: Open live pcap session on NIC with name eth3
+    handle = pcap_open_live("eth0", BUFSIZ, 1, 1000, errbuf);
+
+    // Step 2: Compile filter_exp into BPF psuedo-code
+    pcap_compile(handle, &fp, filter_exp, 0, net);
+    pcap_setfilter(handle, &fp);
+
+    // Step 3: Capture packets
+    printf("starting to sniffing...\n");
+    pcap_loop(handle, -1, got_packet, NULL);
+
+    pcap_close(handle); // Close the handle
 
     return 0;
 }

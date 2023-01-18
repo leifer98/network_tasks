@@ -1,22 +1,17 @@
 # Makefile for Sniffer project
+all: Sniffer Spoofer Gateway attacker
 
-all: partA partAforC pcap attacker
+Sniffer: Sniffer.c
+	gcc -o Sniffer Sniffer.c
 
-#Codes_Packet_Sniffing_Spoofing: Codes_Packet_Sniffing_Spoofing.c
-#	gcc -o Codes Codes_Packet_Sniffing_Spoofing.c
+Spoofer: Spoofer.c
+	gcc -o Spoofer Spoofer.c
 
-pcap: pcap.c
-	gcc -g -o pcap pcap.c -lpcap
+Gateway: Gateway.c
+	gcc -o Gateway Gateway.c -lpcap
 
 attacker: attacker.c
-	g++ -o attacker attacker.c
-
-partA: partA.c
-	gcc -o partA partA.c
-
-partAforC: partAforC.c
-	gcc -o partAforC partAforC.c
-
-
+	gcc -o attacker attacker.c -lpcap
+	
 clean:
-	rm -f *.o partA partAforC pcap attacker
+	rm -f *.o Sniffer Gateway attacker Spoofer

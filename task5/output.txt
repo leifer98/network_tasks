@@ -1,7 +1,7 @@
 REQUEST: 
-{ source_ip: 127.0.0.1, dest_ip: 127.0.0.1, source_port: 9999, dest_port: 44730, timestamp: 16844810, 
-total_length: 647, cache_flag:1, steps_flag:0, type_flag:0, status_code:132, cache_control:15430, data:
-63 c8 31 9e 02 53 1c 00 ff ff 
+{ source_ip: 127.0.0.1, dest_ip: 127.0.0.1, source_port: 9999, dest_port: 40142, timestamp: 16844810, 
+total_length: 647, cache_flag:1, steps_flag:1, type_flag:0, status_code:741, cache_control:15628, data:
+63 c8 64 4f 02 53 1c 00 ff ff 
 00 00 80 04 95 3c 02 00 00 00 00 00 00 8c 0a 63 61 6c 63 75 6c 61 74 6f 72 
 94 8c 10 46 75 6e 63 74 69 6f 6e 43 61 6c 6c 45 78 70 72 94 93 94 29 81 94 
 7d 94 28 8c 08 66 75 6e 63 74 69 6f 6e 94 68 00 8c 08 46 75 6e 63 74 69 6f 
@@ -22,9 +22,9 @@ total_length: 647, cache_flag:1, steps_flag:0, type_flag:0, status_code:132, cac
 61 6e 74 94 93 94 29 81 94 7d 94 }
 
 RESPOND: 
-{ source_ip: 127.0.0.1, dest_ip: 127.0.0.1, source_port: 44730, dest_port: 9999, timestamp: 16844810, 
-total_length: 284, cache_flag:1, steps_flag:0, type_flag:0, status_code:133, cache_control:15430, data:
-63 c8 31 9e 00 e8 18 c8 ff ff 
+{ source_ip: 127.0.0.1, dest_ip: 127.0.0.1, source_port: 40142, dest_port: 9999, timestamp: 16844810, 
+total_length: 284, cache_flag:1, steps_flag:1, type_flag:0, status_code:742, cache_control:15628, data:
+63 c8 64 4f 00 e8 18 c8 ff ff 
 00 00 80 04 95 d1 00 00 00 00 00 00 00 4b 2a 5d 94 28 8c 29 6d 61 78 28 32 
 2c 20 28 33 20 2a 20 34 29 2c 20 6c 6f 67 28 45 29 2c 20 28 36 20 2a 20 37 
 29 2c 20 28 39 20 2f 20 38 29 29 94 8c 34 6d 61 78 28 32 2c 20 31 32 2c 20 
