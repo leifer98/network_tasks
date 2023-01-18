@@ -129,6 +129,26 @@
 void got_packet(u_char *args, const struct pcap_pkthdr *header,
                 const u_char *packet)
 {
+  // struct iphdr *iph = (struct iphdr *)(packet);
+  // struct icmphdr *icmph = (struct icmphdr *)(packet + sizeof(struct iphdr));
+
+  // if (icmph->type == ICMP_ECHOREPLY)
+  // {
+  //   printf("ICMP Echo Reply\n");
+  // }
+  // else if (icmph->type == ICMP_ECHO)
+  // {
+  //   printf("ICMP Echo Request\n");
+  // }
+  // unsigned int ip = iph->saddr;
+  // char addrS[16];
+  // sprintf(addrS, "%d.%d.%d.%d", ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
+
+  // ip = iph->daddr;
+  // char addrD[16];
+  // sprintf(addrD, "%d.%d.%d.%d", ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
+
+  // printf("sniffed a packet, from %s to %s .\n", addrS, addrD);
   u_int ip_len;
   char src_ip[INET_ADDRSTRLEN];
   char dst_ip[INET_ADDRSTRLEN];
@@ -169,7 +189,10 @@ int main()
   bpf_u_int32 net;
 
   // Step 1: Open live pcap session on NIC with name eth3
-  handle = pcap_open_live("eth0", BUFSIZ, 1, 1000, errbuf);
+  // handle = pcap_open_live("eth0", BUFSIZ, 1, 1000, errbuf);
+  handle = pcap_create("eth0", errbuf);
+  pcap_activate(handle);
+  pcap_set_promisc(handle,1);
   puts("finised step 1");
   // Step 2: Compile filter_exp into BPF psuedo-code
   pcap_compile(handle, &fp, filter_exp, 0, net);
